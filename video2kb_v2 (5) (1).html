@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video2KB v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#EFEDE8;
+  --surface:#FFFFFF;
+  --sb:#111318;
+  --sb2:#191D26;
+  --sb-border:#252B38;
+  --sb-text:#C2CFDE;
+  --sb-dim:#3E4F68;
+  --accent:#E8500A;
+  --accent-soft:#FEF0EA;
+  --accent-border:#F5B99B;
+  --blue:#1D4ED8;
+  --blue-soft:#EFF6FF;
+  --green:#047857;
+  --green-soft:#ECFDF5;
+  --green-border:#6EE7B7;
+  --amber:#B45309;
+  --amber-soft:#FFFBEB;
+  --amber-border:#FCD34D;
+  --red:#B91C1C;
+  --red-soft:#FEF2F2;
+  --text:#0C0F18;
+  --text-mid:#505A6E;
+  --text-dim:#9BA8BA;
+  --border:#DDE2EC;
+  --mono:'DM Mono',monospace;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --r:8px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.08);
+}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.55}
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+#sidebar{width:220px;flex-shrink:0;background:var(--sb);display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid var(--sb-border)}
+.sb-logo{padding:20px 16px 18px;border-bottom:1px solid var(--sb-border);display:flex;align-items:center;gap:10px}
+.sb-logo-icon{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sb-logo-name{color:#F0F4F8;font-weight:700;font-size:15px;letter-spacing:-.3px}
+.sb-logo-ver{color:var(--sb-dim);font-size:10px;font-family:var(--mono);margin-left:2px}
+.sb-section{padding:20px 12px 8px;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--sb-dim);font-weight:600}
+.sb-step{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;margin:1px 4px;cursor:default;transition:background .15s;color:var(--sb-dim)}
+.sb-step.active{background:rgba(232,80,10,.15);color:var(--accent)}
+.sb-step.done{color:var(--sb-text)}
+.sb-step.done .sb-dot{background:var(--green)}
+.sb-step.active .sb-dot{background:var(--accent)}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:var(--sb-border);flex-shrink:0;transition:background .2s}
+.sb-step-label{font-size:12.5px;font-weight:500}
+.sb-foot{margin-top:auto;padding:14px 16px;border-top:1px solid var(--sb-border)}
+.sb-cfg-btn{width:100%;background:var(--sb2);border:1px solid var(--sb-border);color:var(--sb-text);padding:8px 12px;border-radius:6px;font-size:12px;font-family:var(--sans);cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s}
+.sb-cfg-btn:hover{background:#1F2535}
+.cfg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cfg-dot.ok{background:var(--green)}
+.cfg-dot.bad{background:var(--red)}
+
+/* ── Main ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-weight:600;font-size:15px;color:var(--text)}
+.topbar-sub{font-size:12px;color:var(--text-dim);margin-top:1px}
+.stage-content{flex:1;overflow-y:auto;padding:28px 28px 60px}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:20px;box-shadow:var(--sh)}
+.card-title{font-size:13px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px}
+
+/* ── Upload zone ── */
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.drop-zone{border:2px dashed var(--border);border-radius:var(--r);padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--bg)}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:var(--accent-soft)}
+.drop-zone.filled{border-color:var(--green-border);background:var(--green-soft);border-style:solid}
+.drop-icon{font-size:26px;margin-bottom:8px}
+.drop-label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.drop-hint{font-size:11.5px;color:var(--text-dim)}
+.drop-fname{font-size:12px;font-family:var(--mono);color:var(--green);margin-top:6px;word-break:break-all}
+input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:6px;font-size:13.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:var(--sans)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#C8430A}
+.btn-primary:disabled{background:var(--border);color:var(--text-dim);cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--text-mid);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg)}
+.btn-sm{padding:7px 14px;font-size:12.5px}
+
+/* ── Process discovery results ── */
+.proc-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.proc-item{border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:all .15s;display:flex;gap:12px;align-items:flex-start;background:var(--surface)}
+.proc-item:hover{border-color:var(--accent-border);background:var(--accent-soft)}
+.proc-item.selected{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent)}
+.proc-item.excluded{opacity:.45;border-style:dashed}
+.proc-check{width:20px;height:20px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s}
+.proc-item.selected .proc-check{background:var(--accent);border-color:var(--accent);color:#fff}
+.proc-body{flex:1}
+.proc-title{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:3px}
+.proc-desc{font-size:12.5px;color:var(--text-mid);line-height:1.4;margin-bottom:6px}
+.proc-time{font-family:var(--mono);font-size:11px;color:var(--text-dim)}
+.proc-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;letter-spacing:.3px}
+.proc-badge.good{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border)}
+.proc-badge.warn{background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber-border)}
+
+/* ── Extraction results ── */
+.step-list{display:flex;flex-direction:column;gap:8px}
+.step-row{display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-radius:6px;background:var(--bg);border:1px solid var(--border)}
+.step-n{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:1px}
+.step-body{flex:1}
+.step-desc{font-size:13px;font-weight:500;color:var(--text)}
+.step-ts{font-family:var(--mono);font-size:10.5px;color:var(--text-dim);margin-top:2px}
+.step-note{font-size:11.5px;color:var(--text-mid);font-style:italic;margin-top:3px}
+
+/* ── Frame review ── */
+.review-proc{margin-bottom:32px}
+.review-proc-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.review-step{margin-bottom:20px}
+.review-step-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.review-step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.review-step-desc{font-size:13px;font-weight:500;color:var(--text)}
+.frames-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.frame-opt{border:2px solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer;transition:all .15s;background:var(--bg)}
+.frame-opt:hover{border-color:var(--accent-border)}
+.frame-opt.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.frame-opt img{width:100%;display:block;aspect-ratio:16/9;object-fit:cover;background:#eee}
+.frame-opt-label{padding:5px 8px;font-size:10.5px;font-family:var(--mono);color:var(--text-dim);display:flex;justify-content:space-between;align-items:center}
+.frame-opt.sel .frame-opt-label{color:var(--accent);font-weight:600}
+.frame-tick{font-size:10px;opacity:0}
+.frame-opt.sel .frame-tick{opacity:1}
+
+/* ── Working / spinner ── */
+.working{display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:14px}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.working-msg{font-size:13.5px;color:var(--text-mid);text-align:center}
+.working-sub{font-size:12px;color:var(--text-dim);text-align:center;font-family:var(--mono)}
+
+/* ── Alerts ── */
+.alert{padding:12px 14px;border-radius:6px;font-size:13px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start}
+.alert-err{background:var(--red-soft);color:var(--red);border:1px solid #FECACA}
+.alert-ok{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border)}
+.alert-info{background:var(--blue-soft);color:var(--blue);border:1px solid #BFDBFE}
+.alert-warn{background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber-border)}
+
+/* ── Settings modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal{background:var(--surface);border-radius:12px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-header{padding:20px 24px 0;display:flex;justify-content:space-between;align-items:center}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-dim);padding:4px}
+.modal-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.6px}
+.field input{padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono);color:var(--text);outline:none;transition:border .15s}
+.field input:focus{border-color:var(--accent)}
+.field-hint{font-size:11.5px;color:var(--text-dim)}
+
+/* ── Export ── */
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.export-card{border:1px solid var(--border);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)}
+.export-card:hover{border-color:var(--accent-border);background:var(--accent-soft)}
+.export-card-icon{font-size:28px;margin-bottom:8px}
+.export-card-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.export-card-desc{font-size:11.5px;color:var(--text-dim)}
+
+/* ── Misc ── */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+.mono{font-family:var(--mono);font-size:12px}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:var(--bg);border:1px solid var(--border);color:var(--text-mid)}
+.hidden{display:none!important}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">🎬</div>
+      <div>
+        <span class="sb-logo-name">Video2KB</span>
+        <span class="sb-logo-ver">v2</span>
+      </div>
+    </div>
+
+    <div class="sb-section">Workflow</div>
+    <div class="sb-step" id="nav-0" onclick="maybeGoTo(0)">
+      <div class="sb-dot"></div><span class="sb-step-label">Upload files</span>
+    </div>
+    <div class="sb-step" id="nav-1" onclick="maybeGoTo(1)">
+      <div class="sb-dot"></div><span class="sb-step-label">Discover processes</span>
+    </div>
+    <div class="sb-step" id="nav-2" onclick="maybeGoTo(2)">
+      <div class="sb-dot"></div><span class="sb-step-label">Select &amp; extract</span>
+    </div>
+    <div class="sb-step" id="nav-3" onclick="maybeGoTo(3)">
+      <div class="sb-dot"></div><span class="sb-step-label">Review frames</span>
+    </div>
+    <div class="sb-step" id="nav-4" onclick="maybeGoTo(4)">
+      <div class="sb-dot"></div><span class="sb-step-label">Export</span>
+    </div>
+
+    <div class="sb-foot">
+      <button class="sb-cfg-btn" onclick="openSettings()">
+        <div class="cfg-dot" id="cfg-dot"></div>
+        ⚙️ Azure OpenAI
+      </button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="stage-title">Upload Files</div>
+        <div class="topbar-sub" id="stage-sub">Provide your Teams recording and caption file to begin</div>
+      </div>
+      <div id="topbar-actions"></div>
+    </div>
+    <div class="stage-content" id="stage-content"></div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-bg hidden" id="settings-modal" onclick="closeSettingsOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Azure OpenAI Configuration</div>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Endpoint URL</label>
+        <input id="cfg-endpoint" placeholder="https://your-resource.openai.azure.com">
+        <div class="field-hint">Your Azure OpenAI resource endpoint</div>
+      </div>
+      <div class="field">
+        <label>Deployment Name</label>
+        <input id="cfg-deployment" placeholder="gpt-5-nano">
+        <div class="field-hint">The deployment name you configured in Azure AI Studio</div>
+      </div>
+      <div class="field">
+        <label>API Key</label>
+        <input id="cfg-apikey" type="password" placeholder="••••••••••••••••">
+      </div>
+      <div class="field">
+        <label>API Version</label>
+        <input id="cfg-apiversion" placeholder="2024-02-01">
+        <div class="field-hint">e.g. 2024-02-01 or 2024-05-01-preview</div>
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">Save configuration</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="extractor-canvas" style="display:none"></canvas>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+const S = {
+  stage: 0,
+  config: loadConfig(),
+  videoFile: null,
+  vttFile: null,
+  videoURL: null,
+  transcript: [],
+  discovered: [],       // [{id,title,description,start_time,end_time,qualify:bool,qualify_reason}]
+  selected: new Set(),
+  extracted: [],        // [{process_id,process_title,source_start,source_end,steps:[...]}]
+  frames: {},           // process_id -> step -> {-5..5} base64
+  selections: {},       // process_id -> step -> offset int
+  crops: {},            // process_id -> step -> {x,y,w,h} normalised 0-1
+  reviewCursor: {pid:null, stepIdx:0},  // current step in review UI
+  mergeSelected: new Set(),  // ids being considered for merge
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════════════════
+function loadConfig(){
+  try { return JSON.parse(localStorage.getItem('v2kb_config') || '{}'); } catch { return {}; }
+}
+function saveSettings(){
+  S.config = {
+    endpoint: document.getElementById('cfg-endpoint').value.trim().replace(/\/$/, ''),
+    deployment: document.getElementById('cfg-deployment').value.trim(),
+    apiKey: document.getElementById('cfg-apikey').value.trim(),
+    apiVersion: document.getElementById('cfg-apiversion').value.trim() || '2024-02-01',
+  };
+  localStorage.setItem('v2kb_config', JSON.stringify(S.config));
+  closeSettings();
+  updateCfgDot();
+}
+function openSettings(){
+  const c = S.config;
+  document.getElementById('cfg-endpoint').value = c.endpoint || '';
+  document.getElementById('cfg-deployment').value = c.deployment || '';
+  document.getElementById('cfg-apikey').value = c.apiKey || '';
+  document.getElementById('cfg-apiversion').value = c.apiVersion || '2024-02-01';
+  document.getElementById('settings-modal').classList.remove('hidden');
+}
+function closeSettings(){ document.getElementById('settings-modal').classList.add('hidden'); }
+function closeSettingsOutside(e){ if(e.target.id==='settings-modal') closeSettings(); }
+function updateCfgDot(){
+  const dot = document.getElementById('cfg-dot');
+  const ok = S.config.endpoint && S.config.apiKey && S.config.deployment;
+  dot.className = 'cfg-dot ' + (ok ? 'ok' : 'bad');
+}
+updateCfgDot();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════════
+const STAGES = [
+  { title: 'Upload Files',       sub: 'Provide your Teams recording and caption file' },
+  { title: 'Process Discovery',  sub: 'AI scans the transcript for reproducible screen demos' },
+  { title: 'Select & Extract',   sub: 'Choose processes to document and run extraction' },
+  { title: 'Review Frames',      sub: 'Pick the best screenshot for each step' },
+  { title: 'Export',             sub: 'Download JSON files and Word documents' },
+];
+function goToStage(n){
+  S.stage = n;
+  document.querySelectorAll('.sb-step').forEach((el,i) => {
+    el.className = 'sb-step' + (i < n ? ' done' : i === n ? ' active' : '');
+  });
+  document.getElementById('stage-title').textContent = STAGES[n].title;
+  document.getElementById('stage-sub').textContent = STAGES[n].sub;
+  renderStage(n);
+}
+function maybeGoTo(n){
+  if(n <= S.stage) goToStage(n);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDER STAGES
+// ═══════════════════════════════════════════════════════════════════════════
+function renderStage(n){
+  const c = document.getElementById('stage-content');
+  const ta = document.getElementById('topbar-actions');
+  ta.innerHTML = '';
+  switch(n){
+    case 0: renderUpload(c); break;
+    case 1: renderDiscovery(c); break;
+    case 2: renderExtract(c); break;
+    case 3: renderReview(c); break;
+    case 4: renderExport(c); break;
+  }
+}
+
+// ── Stage 0: Upload ───────────────────────────────────────────────────────
+function renderUpload(c){
+  c.innerHTML = `
+  <div class="card">
+    <div class="card-title">Input Files</div>
+    <div class="upload-grid">
+      <div class="drop-zone ${S.videoFile ? 'filled' : ''}" id="dz-video">
+        <input type="file" accept="video/*" onchange="handleFile(event,'video')">
+        <div class="drop-icon">🎬</div>
+        <div class="drop-label">Teams Recording</div>
+        <div class="drop-hint">.mp4, .mov, .webm</div>
+        ${S.videoFile ? `<div class="drop-fname">✓ ${S.videoFile.name}</div>` : ''}
+      </div>
+      <div class="drop-zone ${S.vttFile ? 'filled' : ''}" id="dz-vtt">
+        <input type="file" accept=".vtt,.txt" onchange="handleFile(event,'vtt')">
+        <div class="drop-icon">📄</div>
+        <div class="drop-label">Caption File</div>
+        <div class="drop-hint">.vtt (WebVTT transcript)</div>
+        ${S.vttFile ? `<div class="drop-fname">✓ ${S.vttFile.name}</div>` : ''}
+      </div>
+    </div>
+    <div id="upload-error"></div>
+    <button class="btn btn-primary" onclick="startDiscovery()"
+      ${(S.videoFile && S.vttFile) ? '' : 'disabled'}>
+      ▶ Analyse transcript
+    </button>
+  </div>
+
+  <div class="card" style="background:var(--bg)">
+    <div class="card-title">What's new in v2</div>
+    <ul style="padding-left:18px;display:flex;flex-direction:column;gap:8px;color:var(--text-mid);font-size:13px">
+      <li><strong>Tighter process filter</strong> — discovery now requires screen-driven + reproducible + ≥ 3 UI actions. Discussion and Q&amp;A segments are correctly excluded.</li>
+      <li><strong>Consolidation rule</strong> — sub-segments of the same workflow are merged into one process rather than split.</li>
+      <li><strong>Duration heuristic</strong> — segments under 90 s are flagged with extra scrutiny.</li>
+      <li><strong>v2 extraction schema</strong> — structured troubleshooting, warning vs tip note distinction, next-steps chain.</li>
+    </ul>
+  </div>`;
+}
+function handleFile(e, type){
+  const file = e.target.files[0];
+  if(!file) return;
+  if(type === 'video'){
+    S.videoFile = file;
+    if(S.videoURL) URL.revokeObjectURL(S.videoURL);
+    S.videoURL = URL.createObjectURL(file);
+  } else {
+    S.vttFile = file;
+  }
+  renderStage(0);
+}
+
+// ── Stage 1: Discovery ────────────────────────────────────────────────────
+function renderDiscovery(c){
+  if(!S.discovered.length){
+    c.innerHTML = `
+    <div class="working" id="discovery-working">
+      <div class="spinner"></div>
+      <div class="working-msg">Scanning transcript for screen-driven processes…</div>
+      <div class="working-sub" id="disc-status">Applying v2 qualifying criteria</div>
+    </div>`;
+    runDiscovery();
+    return;
+  }
+  renderDiscoveryResults(c);
+}
+
+function renderDiscoveryResults(c){
+  const qualifying = S.discovered.filter(p => p.qualifies !== false);
+  const excluded   = S.discovered.filter(p => p.qualifies === false);
+  const mergeCount = S.mergeSelected.size;
+
+  let html = `<div class="card">
+    <div class="card-title">Processes Found — ${qualifying.length} qualifying</div>`;
+
+  if(qualifying.length){
+    html += `<div class="proc-list">`;
+    qualifying.forEach(p => {
+      const sel     = S.selected.has(p.id);
+      const inMerge = S.mergeSelected.has(p.id);
+      const dur     = durationMins(p.start_time, p.end_time);
+      const badge   = dur >= 1
+        ? `<span class="proc-badge good">✓ ${dur}m</span>`
+        : `<span class="proc-badge warn">⚠ ${dur < 1 ? '<1' : dur}m — review</span>`;
+
+      // Merged synthetic process — show with a combine badge
+      if(p._merged){
+        html += `
+        <div class="proc-item selected" style="border-color:var(--blue);background:var(--blue-soft)">
+          <div class="proc-check" style="background:var(--blue);border-color:var(--blue);color:#fff">✓</div>
+          <div class="proc-body">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+              <div class="proc-title">${esc(p.title)}</div>
+              <span class="proc-badge good" style="background:#EFF6FF;color:var(--blue);border-color:#BFDBFE">
+                ⛓ ${p._mergedIds.length} combined
+              </span>
+            </div>
+            <div class="proc-desc" style="color:var(--text-dim);font-size:11.5px">
+              ${p._mergedIds.map(id => {
+                const src = S.discovered.find(x => x.id === id);
+                return src ? esc(src.title) : '';
+              }).join(' → ')}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+              <span class="proc-time">⏱ ${p.start_time} → ${p.end_time}</span>
+              ${badge}
+              <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px"
+                onclick="event.stopPropagation();unmergeProcess(${p.id})">✕ Unmerge</button>
+            </div>
+          </div>
+        </div>`;
+        return;
+      }
+
+      // Normal process — hidden if it's been absorbed into a merge
+      if(p._absorbedBy) return;
+
+      html += `
+      <div class="proc-item ${sel ? 'selected' : ''} ${inMerge ? 'merge-candidate' : ''}"
+           style="${inMerge ? 'border-color:var(--blue);background:var(--blue-soft);' : ''}"
+           onclick="toggleProcess(${p.id})">
+        <div class="proc-check" style="${inMerge ? 'background:var(--blue);border-color:var(--blue);color:#fff' : ''}">${sel||inMerge ? '✓' : ''}</div>
+        <div class="proc-body">
+          <div class="proc-title">${esc(p.title)}</div>
+          <div class="proc-desc">${esc(p.description)}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+            <span class="proc-time">⏱ ${p.start_time} → ${p.end_time}</span>
+            ${badge}
+            <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px;margin-left:auto"
+              onclick="event.stopPropagation();toggleMerge(${p.id})">
+              ${inMerge ? '✕ Remove from merge' : '⛓ Add to merge'}
+            </button>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div class="alert alert-warn">⚠ No qualifying procedural segments found. The recording may be primarily discussion-based.</div>`;
+  }
+
+  // Merge panel — shown when 2+ items queued
+  if(mergeCount >= 2){
+    const names = [...S.mergeSelected].map(id => {
+      const p = S.discovered.find(x => x.id === id);
+      return p ? p.title : '';
+    });
+    html += `
+    <div style="margin-top:16px;padding:14px 16px;background:var(--blue-soft);border:1px solid #BFDBFE;border-radius:8px">
+      <div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:8px">
+        ⛓ Combine ${mergeCount} processes into one
+      </div>
+      <div style="font-size:12px;color:var(--text-mid);margin-bottom:10px">
+        ${names.map(n => `<span style="background:#fff;border:1px solid #BFDBFE;border-radius:4px;padding:1px 7px;margin-right:4px;font-size:11.5px">${esc(n)}</span>`).join('→')}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="merge-name-input" placeholder="New combined process name…"
+          style="flex:1;padding:8px 11px;border:1px solid #BFDBFE;border-radius:6px;font-size:13px;font-family:var(--sans);outline:none"
+          value="${esc(names[0])}"
+          onkeydown="if(event.key==='Enter') confirmMerge()">
+        <button class="btn btn-primary btn-sm" onclick="confirmMerge()">Combine →</button>
+        <button class="btn btn-ghost btn-sm" onclick="S.mergeSelected.clear();renderDiscoveryResults(document.getElementById('stage-content'))">Cancel</button>
+      </div>
+    </div>`;
+  }
+
+  if(excluded.length){
+    html += `<details style="margin-top:16px" ${mergeCount > 0 ? 'open' : ''}>
+      <summary style="cursor:pointer;font-size:12.5px;color:var(--text-dim);user-select:none">
+        ▸ ${excluded.length} segment(s) excluded by v2 filter — click to override
+      </summary>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">`;
+    excluded.forEach(p => {
+      const sel     = S.selected.has(p.id);
+      const inMerge = S.mergeSelected.has(p.id);
+      html += `
+      <div class="proc-item excluded ${sel ? 'selected' : ''}"
+           style="opacity:1;${sel ? 'border-color:var(--accent);background:var(--accent-soft);' : ''}
+                  ${inMerge ? 'border-color:var(--blue);background:var(--blue-soft);' : ''}">
+        <div class="proc-body">
+          <div class="proc-title" style="color:${sel ? 'var(--text)' : 'var(--text-dim)'}">
+            ${esc(p.title)}
+          </div>
+          <div class="proc-desc" style="font-size:11.5px;color:var(--text-dim)">
+            ${esc(p.reason || p.description)}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+            <span class="proc-time">⏱ ${p.start_time} → ${p.end_time}</span>
+            <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px"
+              onclick="overrideFilter(${p.id})">
+              ${sel ? '✓ Included' : '+ Include'}
+            </button>
+            <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px"
+              onclick="toggleMerge(${p.id})">
+              ${inMerge ? '✕ Remove from merge' : '⛓ Add to merge'}
+            </button>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div></details>`;
+  }
+
+  html += `<hr class="divider">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="goToStage(2)"
+        ${S.selected.size ? '' : 'disabled'}>
+        Extract ${S.selected.size} selected →
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="selectAll()">Select all</button>
+      <button class="btn btn-ghost btn-sm" onclick="S.discovered=[];S.selected.clear();S.mergeSelected.clear();goToStage(1)">Re-scan</button>
+    </div>
+  </div>`;
+
+  c.innerHTML = html;
+
+  // Focus merge input if panel just appeared
+  if(mergeCount >= 2){
+    const inp = document.getElementById('merge-name-input');
+    if(inp) inp.focus();
+  }
+}
+
+function toggleProcess(id){
+  if(S.selected.has(id)) S.selected.delete(id);
+  else S.selected.add(id);
+  renderDiscoveryResults(document.getElementById('stage-content'));
+}
+
+function toggleMerge(id){
+  if(S.mergeSelected.has(id)) S.mergeSelected.delete(id);
+  else S.mergeSelected.add(id);
+  renderDiscoveryResults(document.getElementById('stage-content'));
+}
+
+function overrideFilter(id){
+  // Promote an excluded item to active selection, overriding the duration filter
+  const p = S.discovered.find(x => x.id === id);
+  if(!p) return;
+  if(S.selected.has(id)){
+    S.selected.delete(id);
+  } else {
+    p.qualifies = true;   // lift the filter flag
+    delete p.reason;
+    S.selected.add(id);
+  }
+  renderDiscoveryResults(document.getElementById('stage-content'));
+}
+
+function confirmMerge(){
+  const inp = document.getElementById('merge-name-input');
+  const name = inp ? inp.value.trim() : '';
+  if(!name){ inp && inp.focus(); return; }
+
+  const ids = [...S.mergeSelected];
+  const sources = ids.map(id => S.discovered.find(p => p.id === id)).filter(Boolean);
+
+  // Sort by start time
+  sources.sort((a,b) => hmsToSec(a.start_time) - hmsToSec(b.start_time));
+
+  // Create synthetic merged process
+  const merged = {
+    id: Date.now(),  // unique synthetic id
+    title: name,
+    description: sources.map(s => s.title).join('; '),
+    start_time: sources[0].start_time,
+    end_time:   sources[sources.length-1].end_time,
+    qualifies: true,
+    _merged: true,
+    _mergedIds: ids,
+  };
+
+  // Mark sources as absorbed
+  sources.forEach(s => { s._absorbedBy = merged.id; });
+
+  // Remove absorbed from S.selected, add merged
+  ids.forEach(id => S.selected.delete(id));
+  S.discovered.push(merged);
+  S.selected.add(merged.id);
+  S.mergeSelected.clear();
+
+  renderDiscoveryResults(document.getElementById('stage-content'));
+}
+
+function unmergeProcess(mergedId){
+  const merged = S.discovered.find(p => p.id === mergedId);
+  if(!merged || !merged._merged) return;
+
+  // Restore absorbed sources
+  (merged._mergedIds||[]).forEach(id => {
+    const src = S.discovered.find(p => p.id === id);
+    if(src) delete src._absorbedBy;
+  });
+
+  // Remove merged entry and deselect
+  S.discovered = S.discovered.filter(p => p.id !== mergedId);
+  S.selected.delete(mergedId);
+
+  renderDiscoveryResults(document.getElementById('stage-content'));
+}
+
+function selectAll(){
+  S.discovered.filter(p => p.qualifies !== false && !p._absorbedBy).forEach(p => S.selected.add(p.id));
+  renderDiscoveryResults(document.getElementById('stage-content'));
+}
+
+// ── Stage 2: Extract ──────────────────────────────────────────────────────
+function renderExtract(c){
+  const selected = S.discovered.filter(p => S.selected.has(p.id));
+  if(!selected.length){
+    c.innerHTML = `<div class="alert alert-err">No processes selected. Go back to Discovery.</div>`;
+    return;
+  }
+
+  if(!S.extracted.length){
+    const listHtml = selected.map(p =>
+      `<li><strong>${esc(p.title)}</strong> (${p.start_time} → ${p.end_time})</li>`
+    ).join('');
+
+    c.innerHTML = `
+    <div class="card">
+      <div class="card-title">Ready to extract</div>
+      <ul style="padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-mid);margin-bottom:20px">${listHtml}</ul>
+      <div id="extract-error"></div>
+      <button class="btn btn-primary" id="extract-btn" onclick="runExtraction()">
+        ▶ Extract step guides
+      </button>
+    </div>`;
+    return;
+  }
+
+  renderExtractionResults(c);
+}
+
+function renderExtractionResults(c){
+  let html = '';
+  S.extracted.forEach(proc => {
+    html += `<div class="card">
+      <div class="card-title">${esc(proc.process_title)}</div>
+      <div class="step-list">`;
+    (proc.steps || []).forEach(step => {
+      html += `<div class="step-row">
+        <div class="step-n">${step.step}</div>
+        <div class="step-body">
+          <div class="step-desc">${esc(step.description)}</div>
+          <div class="step-ts">⏱ ${step.timestamp}</div>
+          ${step.detail ? `<div class="step-note" style="color:var(--text-mid);font-style:normal;margin-top:4px">${esc(step.detail)}</div>` : ''}
+          ${step.notes ? `<div class="step-note">${step.notes.startsWith('⚠') ? step.notes : '💡 ' + esc(step.notes)}</div>` : ''}
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  html += `<div style="display:flex;gap:10px;margin-top:4px">
+    <button class="btn btn-primary" onclick="startFrameExtraction()">Extract frames →</button>
+    <button class="btn btn-ghost btn-sm" onclick="S.extracted=[];goToStage(2)">Re-extract</button>
+  </div>`;
+  c.innerHTML = html;
+}
+
+// ── Stage 3: Review — one step at a time ─────────────────────────────────
+function renderReview(c){
+  if(!Object.keys(S.frames).length){
+    c.innerHTML = `
+    <div class="working">
+      <div class="spinner"></div>
+      <div class="working-msg">Extracting frames from video…</div>
+      <div class="working-sub" id="frame-status">Seeking timestamps with canvas</div>
+    </div>`;
+    return;
+  }
+
+  // Build flat list of all steps across all processes
+  const allSteps = [];
+  S.extracted.forEach(proc => {
+    (proc.steps||[]).forEach(step => allSteps.push({proc, step}));
+  });
+
+  const totalSteps = allSteps.length;
+  const doneSteps  = Object.values(S.selections).reduce((a,s)=>a+Object.keys(s).length,0);
+
+  // Initialise cursor
+  if(!S.reviewCursor.pid) S.reviewCursor = { pid: allSteps[0]?.proc.process_id, stepIdx: 0 };
+  const idx   = Math.max(0, Math.min(S.reviewCursor.stepIdx, totalSteps - 1));
+  const {proc, step} = allSteps[idx];
+  const pid = proc.process_id;
+  const sn  = step.step;
+
+  const pFrames = (S.frames[pid]||{})[sn] || {};
+  const selOff  = (S.selections[pid]||{})[sn];
+  const cropKey = `${pid}_${sn}`;
+  const hasCrop = !!S.crops[cropKey];
+
+  const offsets = [-5,-4,-3,-2,-1,0,1,2,3,4,5];
+  // Default selection to T (0) if nothing chosen yet
+  const activeOff = selOff !== undefined ? selOff : null;
+  const selImgSrc = activeOff !== null ? pFrames[activeOff] : null;
+
+  // Carousel thumbnails — all 11 frames small, selected one highlighted
+  let thumbsHtml = `<div style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:thin">`;
+  offsets.forEach(off => {
+    const imgSrc = pFrames[off];
+    const isSel  = activeOff === off;
+    const label  = off === 0 ? 'T' : (off > 0 ? `T+${off}s` : `T${off}s`);
+    thumbsHtml += `
+      <div onclick="selectFrame(${pid},${sn},${off})" id="thumb-${pid}-${sn}-${off}"
+           style="flex-shrink:0;cursor:pointer;width:100px;border-radius:5px;overflow:hidden;
+                  border:2px solid ${isSel ? 'var(--accent)' : 'var(--border)'};
+                  background:${isSel ? 'var(--accent-soft)' : 'var(--bg)'};transition:all .12s">
+        ${imgSrc
+          ? `<img src="${imgSrc}" style="width:100%;display:block;aspect-ratio:16/9;object-fit:cover">`
+          : `<div style="width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim)">–</div>`}
+        <div style="padding:2px 5px;font-size:9.5px;font-family:var(--mono);
+                    color:${isSel ? 'var(--accent)' : 'var(--text-dim)'};text-align:center">
+          ${label}${isSel ? ' ✓' : ''}
+        </div>
+      </div>`;
+  });
+  thumbsHtml += `</div>`;
+
+  c.innerHTML = `
+    <!-- Progress bar -->
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:600">Step ${idx+1} of ${totalSteps}</span>
+        <span style="font-size:12px;color:var(--text-dim)">${doneSteps}/${totalSteps} reviewed</span>
+      </div>
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+        <div style="height:100%;background:var(--accent);width:${Math.round(doneSteps/totalSteps*100)}%;transition:width .3s"></div>
+      </div>
+    </div>
+
+    <!-- Step card -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;
+                    font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${sn}</div>
+        <div style="font-size:15px;font-weight:600">${esc(step.description)}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);padding-left:38px">
+        ⏱ ${step.timestamp} &nbsp;·&nbsp; ${esc(proc.process_title)}</div>
+    </div>
+
+    <!-- Main: selected frame large on top -->
+    <div class="card" style="margin-bottom:12px">
+      <!-- Large selected preview -->
+      <div style="margin-bottom:12px">
+        ${selImgSrc
+          ? `<canvas id="crop-canvas" style="width:100%;border-radius:6px;border:2px solid var(--accent);cursor:crosshair;display:block"></canvas>`
+          : `<div style="width:100%;aspect-ratio:16/9;background:var(--bg);border-radius:6px;border:2px dashed var(--border);
+                         display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:13px">
+               Click a frame below to select it
+             </div>`}
+      </div>
+      <!-- Crop controls -->
+      ${selImgSrc ? `
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button class="btn btn-ghost btn-sm" onclick="startCrop(${pid},${sn})">✂ Crop</button>
+          ${hasCrop ? `<button class="btn btn-ghost btn-sm" onclick="clearCrop(${pid},${sn})">✕ Clear crop</button>` : ''}
+          <span style="font-size:11px;color:var(--text-dim);align-self:center">
+            ${hasCrop ? 'Crop applied' : 'Drag to crop the selected frame'}
+          </span>
+        </div>` : ''}
+      <!-- Thumbnail carousel -->
+      <div style="font-size:11px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">
+        All frames — click to select
+      </div>
+      ${thumbsHtml}
+    </div>
+
+    <!-- Navigation -->
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <button class="btn btn-ghost" onclick="reviewNav(-1)" ${idx===0?'disabled':''}>← Previous</button>
+      <button class="btn btn-primary" onclick="goToStage(4)" ${doneSteps>=totalSteps?'':'disabled'}>
+        Export → (${doneSteps}/${totalSteps} done)
+      </button>
+      <button class="btn btn-ghost" onclick="reviewNav(1)" ${idx===totalSteps-1?'disabled':''}>Next →</button>
+    </div>`;
+
+  // Draw selected frame on crop canvas
+  if(selImgSrc){
+    const cvs = document.getElementById('crop-canvas');
+    if(cvs){
+      const img = new Image();
+      img.onload = () => {
+        cvs.width  = img.naturalWidth;
+        cvs.height = img.naturalHeight;
+        cvs.style.maxWidth = '100%';
+        const ctx = cvs.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const crop = S.crops[cropKey];
+        if(crop){
+          // Draw crop overlay
+          ctx.strokeStyle = 'rgba(232,80,10,0.9)';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(crop.x * img.naturalWidth, crop.y * img.naturalHeight,
+                         crop.w * img.naturalWidth, crop.h * img.naturalHeight);
+        }
+      };
+      img.src = selImgSrc;
+    }
+  }
+}
+
+function reviewNav(dir){
+  const allSteps = [];
+  S.extracted.forEach(proc => (proc.steps||[]).forEach(step => allSteps.push({proc,step})));
+  S.reviewCursor.stepIdx = Math.max(0, Math.min(S.reviewCursor.stepIdx + dir, allSteps.length - 1));
+  renderReview(document.getElementById('stage-content'));
+}
+
+function selectFrame(pid, stepNum, off){
+  if(!S.selections[pid]) S.selections[pid] = {};
+  S.selections[pid][stepNum] = off;
+  renderReview(document.getElementById('stage-content'));
+}
+
+// ── Crop tool ─────────────────────────────────────────────────────────────
+let _cropState = null;
+
+function startCrop(pid, sn){
+  const cvs = document.getElementById('crop-canvas');
+  if(!cvs) return;
+  const cropKey = `${pid}_${sn}`;
+  let dragging = false, sx = 0, sy = 0;
+
+  function getPos(e){
+    const r = cvs.getBoundingClientRect();
+    const scaleX = cvs.width  / r.width;
+    const scaleY = cvs.height / r.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (clientX - r.left) * scaleX, y: (clientY - r.top) * scaleY };
+  }
+
+  function onDown(e){ e.preventDefault(); dragging=true; const p=getPos(e); sx=p.x; sy=p.y; }
+  function onMove(e){
+    if(!dragging) return;
+    e.preventDefault();
+    const p=getPos(e);
+    const ctx=cvs.getContext('2d');
+    const img=new Image();
+    img.onload=()=>{
+      ctx.drawImage(img,0,0);
+      ctx.strokeStyle='rgba(232,80,10,0.9)';
+      ctx.lineWidth=3;
+      ctx.strokeRect(sx,sy,p.x-sx,p.y-sy);
+    };
+    img.src = (S.frames[pid]||{})[sn]?.[(S.selections[pid]||{})[sn]];
+  }
+  function onUp(e){
+    if(!dragging) return;
+    dragging=false;
+    const p=getPos(e);
+    S.crops[cropKey]={
+      x: Math.min(sx,p.x)/cvs.width,  y: Math.min(sy,p.y)/cvs.height,
+      w: Math.abs(p.x-sx)/cvs.width,  h: Math.abs(p.y-sy)/cvs.height
+    };
+    // Remove listeners
+    cvs.removeEventListener('mousedown',onDown);
+    cvs.removeEventListener('mousemove',onMove);
+    cvs.removeEventListener('mouseup',onUp);
+    renderReview(document.getElementById('stage-content'));
+  }
+  cvs.addEventListener('mousedown',onDown);
+  cvs.addEventListener('mousemove',onMove);
+  cvs.addEventListener('mouseup',onUp);
+}
+
+function clearCrop(pid, sn){
+  delete S.crops[`${pid}_${sn}`];
+  renderReview(document.getElementById('stage-content'));
+}
+
+// Helper: apply crop to a base64 image, returns new base64
+function applyCrop(imgSrc, crop){
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const cvs = document.createElement('canvas');
+      cvs.width  = Math.round(crop.w * img.naturalWidth);
+      cvs.height = Math.round(crop.h * img.naturalHeight);
+      const ctx  = cvs.getContext('2d');
+      ctx.drawImage(img,
+        crop.x * img.naturalWidth, crop.y * img.naturalHeight,
+        cvs.width, cvs.height,
+        0, 0, cvs.width, cvs.height);
+      resolve(cvs.toDataURL('image/jpeg', 0.92));
+    };
+    img.src = imgSrc;
+  });
+}
+
+// ── Stage 4: Export ───────────────────────────────────────────────────────
+function renderExport(c){
+  const hasFrames = Object.keys(S.frames).length > 0;
+  c.innerHTML = `
+  <div class="card">
+    <div class="card-title">Export</div>
+    <p style="font-size:13px;color:var(--text-mid);margin-bottom:6px">
+      <strong>${S.extracted.length}</strong> process guide(s) ready.
+      ${hasFrames ? '✅ Screenshots captured.' : '⚠️ No screenshots — Word docs will contain steps only. Add screenshots by running the full pipeline below.'}
+    </p>
+    <div id="export-progress" style="display:none;margin:12px 0">
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:8px">
+        <div id="export-bar" style="height:100%;background:var(--accent);width:0%;transition:width .3s"></div>
+      </div>
+      <div id="export-msg" style="font-size:12px;color:var(--text-mid);font-family:var(--mono)">Preparing…</div>
+    </div>
+    <div id="export-done" style="display:none" class="alert alert-ok">✅ Done! Check your Downloads folder.</div>
+    <div class="export-grid" style="margin-top:16px">
+      <div class="export-card" onclick="downloadAllJSON()">
+        <div class="export-card-icon">📦</div>
+        <div class="export-card-title">Download JSON files</div>
+        <div class="export-card-desc">steps_XX_*.json — feed into pipeline Stage 2+</div>
+      </div>
+      <div class="export-card" id="docx-card" onclick="downloadAllDocx()">
+        <div class="export-card-icon">📄</div>
+        <div class="export-card-title">Download Word docs</div>
+        <div class="export-card-desc">${hasFrames ? 'One .docx per process, with screenshots' : 'One .docx per process (steps only — no screenshots yet)'}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="background:var(--bg)">
+    <div class="card-title">Add screenshots via full pipeline</div>
+    <p style="font-size:13px;color:var(--text-mid);margin-bottom:10px">Download the JSON files above, then run:</p>
+    <pre style="background:var(--sb);color:var(--sb-text);padding:14px 16px;border-radius:6px;font-size:12px;overflow-x:auto;line-height:1.6">python3 02_extract_frames.py --video recording.mp4
+python3 03_build_review_ui.py
+node 04_build_document.js</pre>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VTT PARSING
+// ═══════════════════════════════════════════════════════════════════════════
+function parseVTT(text){
+  const entries = [];
+
+  // Normalise line endings — Teams VTT exports use \r\n
+  const norm = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  // Split on one or more blank lines (standard VTT cue separator)
+  const blocks = norm.split(/\n{2,}/);
+
+  const timeRe = /(\d{1,2}:\d{2}:\d{2}[.,]\d{3})\s*-->\s*(\d{1,2}:\d{2}:\d{2}[.,]\d{3})/;
+  // <v Speaker Name>text — standard WebVTT voice tag
+  const voiceRe = /^<v\s+([^>]+)>(.*)/;
+  // Speaker Name: text — Teams plain-text speaker format
+  const colonRe  = /^([A-Za-z\u00C0-\u024F][^:\n]{1,50}):\s+(.*)/;
+
+  for(const block of blocks){
+    const lines = block.trim().split('\n');
+    // Find the timestamp line (skip numeric cue IDs on the line before)
+    const tIdx = lines.findIndex(l => timeRe.test(l));
+    if(tIdx < 0) continue;
+
+    const tm = lines[tIdx].match(timeRe);
+    const start = vttToSec(tm[1]);
+    const textLines = lines.slice(tIdx + 1);
+
+    let speaker = null;
+    const parts = [];
+
+    for(const ln of textLines){
+      const clean = ln.trim();
+      if(!clean) continue;
+
+      // <v Speaker>text
+      const vm = clean.match(voiceRe);
+      if(vm){
+        if(!speaker) speaker = vm[1].trim();
+        const t = vm[2].replace(/<[^>]+>/g,'').trim();
+        if(t) parts.push(t);
+        continue;
+      }
+
+      // Speaker: text (only grab speaker on first line of cue)
+      const cm = clean.match(colonRe);
+      if(cm && !speaker && parts.length === 0){
+        speaker = cm[1].trim();
+        const t = cm[2].replace(/<[^>]+>/g,'').trim();
+        if(t) parts.push(t);
+        continue;
+      }
+
+      // Plain text
+      const t = clean.replace(/<[^>]+>/g,'').trim();
+      if(t) parts.push(t);
+    }
+
+    const text = parts.join(' ').trim();
+    if(text) entries.push({ start, startFmt: secToHMS(start), speaker, text });
+  }
+
+  console.log('[Video2KB v2] VTT parsed:', entries.length, 'cues; first:', JSON.stringify(entries[0]));
+  return entries;
+}
+function vttToSec(ts){
+  const clean = ts.replace(',','.');
+  const parts = clean.split(':').map(Number);
+  return parts.length === 3 ? parts[0]*3600 + parts[1]*60 + parts[2] : parts[0]*60 + parts[1];
+}
+function secToHMS(s, ms=false){
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if(ms) return `${pad(h)}:${pad(m)}:${pad2(sec)}`;
+  return `${pad(h)}:${pad(m)}:${pad(Math.floor(sec))}`;
+}
+function pad(n){ return String(n).padStart(2,'0'); }
+function pad2(n){ return n.toFixed(3).padStart(6,'0'); }
+function hmsToSec(hms){
+  const p = hms.split(':').map(Number);
+  return p.length === 3 ? p[0]*3600 + p[1]*60 + p[2] : p[0]*60 + p[1];
+}
+function durationMins(s, e){
+  return Math.round((hmsToSec(e) - hmsToSec(s)) / 60 * 10) / 10;
+}
+
+function formatTranscript(entries){
+  return entries.map(e => {
+    const who = e.speaker || 'Speaker';
+    return `[${e.startFmt}] ${who}: ${e.text}`;
+  }).join('\n');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AZURE OPENAI
+// ═══════════════════════════════════════════════════════════════════════════
+async function callAzure(messages, maxTokens=16000){
+  const {endpoint, deployment, apiVersion, apiKey} = S.config;
+  if(!endpoint || !apiKey) throw new Error('Azure OpenAI not configured. Click ⚙️ in the sidebar to add your credentials.');
+
+  const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+    body: JSON.stringify({ messages, max_completion_tokens: maxTokens })
+  });
+
+  if(!resp.ok){
+    let msg = `HTTP ${resp.status}`;
+    try { const j = await resp.json(); msg = j?.error?.message || msg; } catch {}
+    throw new Error(`Azure OpenAI: ${msg}`);
+  }
+
+  const data = await resp.json();
+  return data.choices[0].message.content;
+}
+
+function parseJSON(raw){
+  const clean = raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  return JSON.parse(clean);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STAGE 1 — DISCOVERY (v2 prompt)
+// ═══════════════════════════════════════════════════════════════════════════
+async function runDiscovery(){
+  S.vttFile.text().then(async text => {
+    S.transcript = parseVTT(text);
+    if(!S.transcript.length){
+      document.getElementById('stage-content').innerHTML =
+        `<div class="alert alert-err">Could not parse the VTT file. Make sure it is a valid WebVTT caption file.</div>`;
+      return;
+    }
+
+    const transcriptText = formatTranscript(S.transcript);
+    const truncated = transcriptText.length > 80000
+      ? transcriptText.substring(0, 80000) + '\n[transcript truncated]'
+      : transcriptText;
+
+    // ── Two-step discovery (v1-proven approach for gpt-5-nano reasoning model) ──
+    // Step 1: plain English list — reasoning models nail description tasks.
+    // Step 2: convert that list to JSON — simple, never fails.
+    // Single-shot JSON requests consistently return [] with o-series models.
+
+    // Debug: log what we're actually sending so we can verify transcript content
+    console.log('[Video2KB v2] Transcript entries:', S.transcript.length);
+    console.log('[Video2KB v2] First 800 chars sent to model:', truncated.substring(0, 800));
+    console.log('[Video2KB v2] Last 400 chars sent to model:', truncated.slice(-400));
+
+    // No system prompt — gpt-5-nano reasoning models perform better with a
+    // single clear user instruction than a system + user split.
+    const PASS1_USER = `Here is a meeting transcript. Your job is to read it and list the topics and activities covered.
+
+For every segment where people discuss, demonstrate, or explain how to DO something — a software workflow, a procedure, a process, a set of steps — write one line like this:
+PROCESS: <title> | <what happens> | start: <HH:MM:SS> | end: <HH:MM:SS>
+
+Include anything procedural: software demos, explained workflows, step-by-step instructions, walkthroughs, how-to explanations.
+
+Write a PROCESS line for every segment you find. Then stop.
+
+TRANSCRIPT:
+${truncated}`;
+
+    try {
+      const statusEl = document.getElementById('disc-status');
+      if(statusEl) statusEl.textContent = 'Pass 1 — reading transcript…';
+
+      const summaryRaw = await callAzure([
+        { role: 'user', content: PASS1_USER }
+      ], 16000);
+
+      console.log('[Video2KB v2] Pass 1 full response:', summaryRaw);
+
+      if(!summaryRaw || !summaryRaw.includes('PROCESS:')){
+        // Show full model response so user can debug
+        const preview = (summaryRaw || '(empty response)').substring(0, 800);
+        throw new Error('Pass 1 returned no PROCESS lines.\n\nFull model response:\n' + preview + '\n\n(Check browser console F12 for full transcript sent)');
+      }
+
+      // ── Pass 2: convert to JSON ───────────────────────────────────────────
+      if(statusEl) statusEl.textContent = 'Pass 2 — structuring results…';
+
+      const PASS2_USER = `Convert this list to a JSON array. Return ONLY the JSON array, nothing else.
+
+Input:
+${summaryRaw}
+
+Output format:
+[{"id":1,"title":"Short title","description":"One sentence","start_time":"HH:MM:SS","end_time":"HH:MM:SS"}]`;
+
+      const jsonRaw = await callAzure([
+        { role: 'system', content: 'Convert the input to a JSON array. Return ONLY valid JSON, no markdown, no explanation.' },
+        { role: 'user',   content: PASS2_USER }
+      ], 8000);
+
+      console.log('[Video2KB v2] Pass 2 JSON:', jsonRaw);
+
+      const rawItems = parseJSON(jsonRaw);
+
+      if(!Array.isArray(rawItems) || !rawItems.length){
+        throw new Error('Could not structure results.\n\nPass 1 found:\n' + summaryRaw.substring(0, 400));
+      }
+
+      // ── JS-side v2 filter: duration heuristic ────────────────────────────
+      S.discovered = rawItems.map((p, i) => {
+        p.id = i + 1;
+        const dur = durationMins(p.start_time, p.end_time);
+        if(dur < 0.5){
+          p.qualifies = false;
+          p.reason = `Only ${dur < 1 ? '<1' : dur}m — very short segment`;
+        } else {
+          p.qualifies = true;
+          p.reason = null;
+        }
+        return p;
+      });
+
+      S.discovered.filter(p => p.qualifies !== false).forEach(p => S.selected.add(p.id));
+      renderDiscoveryResults(document.getElementById('stage-content'));
+
+    } catch(err) {
+      document.getElementById('stage-content').innerHTML =
+        `<div class="alert alert-err">❌ Discovery failed: ${esc(err.message)}</div>
+         <button class="btn btn-ghost btn-sm" onclick="S.discovered=[];goToStage(1)">Retry</button>
+         <button class="btn btn-ghost btn-sm" onclick="goToStage(0)" style="margin-left:8px">← Back</button>`;
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STAGE 2 — EXTRACTION (v2 schema)
+// ═══════════════════════════════════════════════════════════════════════════
+async function runExtraction(){
+  const btn = document.getElementById('extract-btn');
+  btn.disabled = true;
+  btn.textContent = 'Extracting…';
+  document.getElementById('extract-error').innerHTML = '';
+
+  const selected = S.discovered.filter(p => S.selected.has(p.id));
+  const transcriptText = formatTranscript(S.transcript);
+  const results = [];
+
+  const EXTRACT_SYSTEM = `You extract precise, step-by-step process guides from meeting transcripts.
+
+For the specified timestamp range, identify every distinct UI action the presenter performs and output a complete JSON object.
+
+SCHEMA (return ONLY valid JSON — no markdown, no preamble):
+{
+  "process_id": <integer>,
+  "guide_number": "PG-01",
+  "process_title": "<Short descriptive title>",
+  "audience": "<Who this guide is for — infer from context, or 'All users'>",
+  "source_start": "HH:MM:SS.000",
+  "source_end": "HH:MM:SS.000",
+  "overview": "<2-3 sentences: what this process achieves, when to use it, any important context>",
+  "prerequisites": ["<accounts, credentials, URLs, browser requirements, prior steps>"],
+  "steps": [
+    {
+      "step": 1,
+      "description": "<Concise imperative action — Click, Enter, Select, Navigate to — max 10 words>",
+      "detail": "<1-3 sentences of additional context the presenter mentions around this step — WHY they do it, what to watch for, any variant behaviour, or null if nothing extra was said>",
+      "timestamp": "HH:MM:SS.000",
+      "notes": "<explicit warning or tip the presenter states — prefix with ⚠ for warnings, null if none>"
+    }
+  ],
+  "troubleshooting": [
+    {
+      "symptom": "<what the user sees>",
+      "cause": "<why it happens>",
+      "resolution": "<how to fix it>"
+    }
+  ],
+  "known_issues": [
+    "<A known limitation, gap, or issue explicitly mentioned during the meeting — e.g. a missing feature, a workaround in use, a data quality concern, or a process that isn't fully resolved yet>"
+  ],
+  "next_steps": ["<related guide or follow-on action>"]
+}
+
+FIELD RULES:
+- description: short imperative action only — "Click X", "Navigate to Y", "Enter Z". Max 10 words. No explanations here.
+- detail: capture any additional verbal context the presenter gives around this step — the reason they do it, what variant to use in different scenarios, what to look for on screen, caveats. Pull this directly from the transcript. null if the presenter says nothing extra.
+- notes: only for explicit warnings or tips the presenter states out loud. Prefix ⚠ for warnings (must/never/caution/do not). null if none.
+- troubleshooting: only include issues the presenter explicitly mentions — do NOT invent entries.
+- timestamps: format HH:MM:SS.000 (pad with zeros).
+- Keep steps atomic — one action per step. Last step must be a verification/confirmation.
+- known_issues: capture any limitations, gaps, workarounds, or unresolved problems the participants explicitly mention — things like "this doesn't handle X yet", "we had to manually fix Y", "there's a known issue with Z". Do NOT invent items. Empty array [] if nothing mentioned.`;
+
+  for(let i = 0; i < selected.length; i++){
+    const proc = selected[i];
+    document.getElementById('extract-btn').textContent = `Extracting ${i+1}/${selected.length}…`;
+
+    // For merged processes, collect transcript from all source segments
+    let segRanges;
+    if(proc._merged && proc._mergedIds){
+      segRanges = proc._mergedIds.map(id => {
+        const src = S.discovered.find(p => p.id === id);
+        return src ? { start: hmsToSec(src.start_time), end: hmsToSec(src.end_time), title: src.title } : null;
+      }).filter(Boolean);
+      segRanges.sort((a,b) => a.start - b.start);
+    } else {
+      segRanges = [{ start: hmsToSec(proc.start_time), end: hmsToSec(proc.end_time), title: proc.title }];
+    }
+
+    // Build transcript — include all segments, with sub-labels for merged
+    let segment = '';
+    segRanges.forEach((r, ri) => {
+      const lines = S.transcript
+        .filter(e => e.start >= r.start - 5 && e.start <= r.end + 5)
+        .map(e => `[${e.startFmt}] ${e.speaker || 'Speaker'}: ${e.text}`)
+        .join('\n');
+      if(proc._merged) segment += `\n--- Part ${ri+1}: ${r.title} ---\n`;
+      segment += lines + '\n';
+    });
+
+    const mergeNote = proc._merged
+      ? `\nNote: this is a combined process made up of ${segRanges.length} related segments. Extract all steps in chronological order as one continuous guide.`
+      : '';
+
+    const userMsg = `Extract a full process guide for process ${i+1}: "${proc.title}"
+Timestamp range: ${proc.start_time} → ${proc.end_time}${mergeNote}
+
+Transcript segment:
+${segment.trim()}`;
+
+    try {
+      const raw = await callAzure([
+        { role: 'system', content: EXTRACT_SYSTEM },
+        { role: 'user',   content: userMsg }
+      ], 16000);
+
+      const parsed = parseJSON(raw);
+      parsed.process_id = i + 1;
+      results.push(parsed);
+
+    } catch(err){
+      document.getElementById('extract-error').innerHTML =
+        `<div class="alert alert-err">❌ Extraction failed for "${esc(proc.title)}": ${esc(err.message)}</div>`;
+      btn.disabled = false;
+      btn.textContent = 'Retry extraction';
+      return;
+    }
+  }
+
+  S.extracted = results;
+  renderExtractionResults(document.getElementById('stage-content'));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FRAME EXTRACTION (canvas)
+// ═══════════════════════════════════════════════════════════════════════════
+async function startFrameExtraction(){
+  goToStage(3);
+  const video = document.createElement('video');
+  video.src = S.videoURL;
+  video.crossOrigin = 'anonymous';
+  video.muted = true;
+  await new Promise(r => { video.onloadedmetadata = r; video.load(); });
+
+  const canvas = document.getElementById('extractor-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width  = video.videoWidth  || 1280;
+  canvas.height = video.videoHeight || 720;
+
+  const totalSteps = S.extracted.reduce((a,p) => a + (p.steps||[]).length, 0);
+  let done = 0;
+
+  for(const proc of S.extracted){
+    const pid = proc.process_id;
+    S.frames[pid] = {};
+    for(const step of (proc.steps||[])){
+      const sn = step.step;
+      S.frames[pid][sn] = {};
+      const base = hmsToSec(step.timestamp);
+      // 11 frames: T-5s through T+5s at 1s intervals
+      const offsets = [-5,-4,-3,-2,-1,0,1,2,3,4,5];
+      for(const off of offsets){
+        const clampedT = Math.max(0, Math.min(base + off, video.duration - 0.1));
+        const frame = await seekAndCapture(video, canvas, ctx, clampedT);
+        S.frames[pid][sn][off] = frame;
+      }
+      done++;
+      const status = document.getElementById('frame-status');
+      if(status) status.textContent = `Step ${done}/${totalSteps} (Process ${pid})`;
+    }
+  }
+
+  renderReview(document.getElementById('stage-content'));
+}
+
+function seekAndCapture(video, canvas, ctx, t){
+  return new Promise(resolve => {
+    video.currentTime = t;
+    const handler = () => {
+      video.removeEventListener('seeked', handler);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    video.addEventListener('seeked', handler);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════════════════════════
+function downloadAllJSON(){
+  S.extracted.forEach((proc, i) => {
+    const slug = slugify(proc.process_title);
+    const num  = String(i+1).padStart(2,'0');
+    const name = `steps_${num}_${slug}.json`;
+    downloadFile(name, JSON.stringify(proc, null, 2), 'application/json');
+  });
+}
+
+async function downloadAllDocx(){
+  const progress  = document.getElementById('export-progress');
+  const bar       = document.getElementById('export-bar');
+  const msg       = document.getElementById('export-msg');
+  const doneEl    = document.getElementById('export-done');
+  const card      = document.getElementById('docx-card');
+
+  if(progress) progress.style.display = 'block';
+  if(card)     card.style.pointerEvents = 'none';
+  if(doneEl)   doneEl.style.display = 'none';
+
+  const total = S.extracted.length;
+  for(let i = 0; i < total; i++){
+    const proc = S.extracted[i];
+    const pct  = Math.round((i / total) * 100);
+    if(bar) bar.style.width = pct + '%';
+    if(msg) msg.textContent = `Building ${i+1}/${total}: ${proc.process_title}…`;
+
+    try {
+      const blob = await buildDocx(proc, i+1);
+      const slug = slugify(proc.process_title);
+      const name = `process_guide_${String(i+1).padStart(2,'0')}_${slug}.docx`;
+      downloadBlob(blob, name);
+      // Small delay so browser doesn't block multiple downloads
+      await new Promise(r => setTimeout(r, 600));
+    } catch(err){
+      if(msg) msg.textContent = `Error on "${proc.process_title}": ${err.message}`;
+      console.error('docx build error:', err);
+      if(card) card.style.pointerEvents = '';
+      return;
+    }
+  }
+
+  if(bar)     bar.style.width = '100%';
+  if(msg)     msg.textContent = `${total} document(s) saved to Downloads.`;
+  if(doneEl)  doneEl.style.display = 'block';
+  if(card)    card.style.pointerEvents = '';
+}
+
+async function buildDocx(proc, idx){
+  // Open XML / OOXML assembled manually via JSZip
+  const JSZip = window.JSZip;
+  if(!JSZip){
+    throw new Error('JSZip library not loaded. Make sure you have an internet connection and refresh the page.');
+  }
+
+  const title = proc.process_title || `Process ${idx}`;
+  const steps = proc.steps || [];
+  const pid   = proc.process_id;
+  const selMap = S.selections[pid] || {};
+
+  const nsDocx  = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const now = new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+
+  let bodyXml = '';
+
+  // Title
+  bodyXml += `<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>${xmlEsc(title)}</w:t></w:r></w:p>`;
+  bodyXml += `<w:p><w:r><w:rPr><w:color w:val="888888"/><w:sz w:val="18"/></w:rPr><w:t>Generated: ${xmlEsc(now)}    |    ${xmlEsc(proc.source_start||'–')} → ${xmlEsc(proc.source_end||'–')}</w:t></w:r></w:p>`;
+  bodyXml += `<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="6" w:color="1F3864"/></w:pBdr></w:pPr></w:p>`;
+
+  // Overview
+  if(proc.overview){
+    bodyXml += `<w:p><w:r><w:t>${xmlEsc(proc.overview)}</w:t></w:r></w:p>`;
+  }
+
+  // Steps
+  const imgRels = [];
+  let imgIdx = 1;
+
+  for(const step of steps){
+    const sn = step.step;
+    const chosenOff = selMap[sn];
+    const cropKey = `${pid}_${sn}`;
+    let rawImgData = (chosenOff !== undefined && S.frames[pid] && S.frames[pid][sn])
+      ? S.frames[pid][sn][chosenOff] : null;
+    const imgData = (rawImgData && S.crops[cropKey])
+      ? await applyCrop(rawImgData, S.crops[cropKey]) : rawImgData;
+
+    // Step N heading with keepNext to stay with image
+    bodyXml += `<w:p><w:pPr><w:pStyle w:val="Heading2"/><w:keepNext/></w:pPr><w:r><w:t>Step ${sn}</w:t></w:r></w:p>`;
+
+    if(imgData){
+      const b64 = imgData.split(',')[1];
+      const rId = `rId${imgIdx}`;
+      imgRels.push({ rId, b64 });
+      const W = 5486400, H = Math.round(W * 9/16);
+      bodyXml += `<w:p><w:pPr><w:keepNext/><w:spacing w:before="60" w:after="60"/></w:pPr><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><wp:extent cx="${W}" cy="${H}"/><wp:docPr id="${imgIdx}" name="img${imgIdx}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${imgIdx}" name="img${imgIdx}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rId}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${W}" cy="${H}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+      imgIdx++;
+    }
+
+    // Description as bullet below screenshot
+    bodyXml += `<w:p><w:pPr><w:pStyle w:val="ListBullet"/><w:spacing w:before="60" w:after="60"/></w:pPr><w:r><w:t>${xmlEsc(step.description)}</w:t></w:r></w:p>`;
+
+    // Detail — additional transcript context, indented below the bullet
+    if(step.detail){
+      bodyXml += `<w:p><w:pPr><w:ind w:left="360"/><w:spacing w:before="0" w:after="80"/></w:pPr><w:r><w:rPr><w:i/><w:color w:val="444444"/><w:sz w:val="20"/></w:rPr><w:t>${xmlEsc(step.detail)}</w:t></w:r></w:p>`;
+    }
+
+    if(step.notes){
+      const isWarn = step.notes.startsWith('\u26a0') || step.notes.startsWith('⚠');
+      bodyXml += `<w:p><w:pPr><w:ind w:left="360"/><w:spacing w:before="0" w:after="160"/></w:pPr><w:r><w:rPr><w:i/><w:color w:val="${isWarn ? 'B45309' : '1D4ED8'}"/><w:sz w:val="18"/></w:rPr><w:t>${xmlEsc(step.notes)}</w:t></w:r></w:p>`;
+    }
+  }
+
+  // ── Troubleshooting table ─────────────────────────────────────────────────
+  const troubleshooting = proc.troubleshooting || [];
+  if(troubleshooting.length){
+    // Section heading
+    bodyXml += `<w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:t>Troubleshooting</w:t></w:r></w:p>`;
+
+    // Table: 3 columns — Symptom | Cause | Resolution
+    // Header row (dark navy fill)
+    const hdrCell = (text) =>
+      `<w:tc><w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="1F3864"/><w:tcBorders>
+        <w:top w:val="single" w:sz="4" w:color="1F3864"/>
+        <w:bottom w:val="single" w:sz="4" w:color="1F3864"/>
+        <w:left w:val="single" w:sz="4" w:color="1F3864"/>
+        <w:right w:val="single" w:sz="4" w:color="1F3864"/>
+      </w:tcBorders></w:tcPr>
+      <w:p><w:pPr><w:spacing w:before="80" w:after="80"/><w:ind w:left="80" w:right="80"/></w:pPr>
+        <w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/><w:sz w:val="20"/></w:rPr><w:t>${xmlEsc(text)}</w:t></w:r>
+      </w:p></w:tc>`;
+
+    const dataCell = (text) =>
+      `<w:tc><w:tcPr><w:tcBorders>
+        <w:top w:val="single" w:sz="4" w:color="CCCCCC"/>
+        <w:bottom w:val="single" w:sz="4" w:color="CCCCCC"/>
+        <w:left w:val="single" w:sz="4" w:color="CCCCCC"/>
+        <w:right w:val="single" w:sz="4" w:color="CCCCCC"/>
+      </w:tcBorders></w:tcPr>
+      <w:p><w:pPr><w:spacing w:before="80" w:after="80"/><w:ind w:left="80" w:right="80"/></w:pPr>
+        <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="222222"/></w:rPr><w:t>${xmlEsc(text||'–')}</w:t></w:r>
+      </w:p></w:tc>`;
+
+    let tblXml = `<w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="TableGrid"/>
+        <w:tblW w:w="9360" w:type="dxa"/>
+        <w:tblBorders>
+          <w:top w:val="single" w:sz="4" w:color="CCCCCC"/>
+          <w:bottom w:val="single" w:sz="4" w:color="CCCCCC"/>
+          <w:left w:val="single" w:sz="4" w:color="CCCCCC"/>
+          <w:right w:val="single" w:sz="4" w:color="CCCCCC"/>
+          <w:insideH w:val="single" w:sz="4" w:color="CCCCCC"/>
+          <w:insideV w:val="single" w:sz="4" w:color="CCCCCC"/>
+        </w:tblBorders>
+        <w:tblCellMar>
+          <w:top w:w="80" w:type="dxa"/>
+          <w:bottom w:w="80" w:type="dxa"/>
+          <w:left w:w="108" w:type="dxa"/>
+          <w:right w:w="108" w:type="dxa"/>
+        </w:tblCellMar>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="3120"/>
+        <w:gridCol w:w="3120"/>
+        <w:gridCol w:w="3120"/>
+      </w:tblGrid>
+      <w:tr>${hdrCell('Symptom')}${hdrCell('Cause')}${hdrCell('Resolution')}</w:tr>`;
+
+    troubleshooting.forEach(row => {
+      tblXml += `<w:tr>${dataCell(row.symptom)}${dataCell(row.cause)}${dataCell(row.resolution)}</w:tr>`;
+    });
+
+    tblXml += `</w:tbl>`;
+    bodyXml += tblXml;
+    // Spacer after table
+    bodyXml += `<w:p><w:pPr><w:spacing w:before="160" w:after="160"/></w:pPr></w:p>`;
+  }
+
+  // ── Known Issues / Limitations / Gaps ─────────────────────────────────────
+  const knownIssues = proc.known_issues || [];
+  if(knownIssues.length){
+    bodyXml += `<w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:t>Known Issues &amp; Limitations</w:t></w:r></w:p>`;
+    knownIssues.forEach(issue => {
+      bodyXml += `<w:p><w:pPr><w:pStyle w:val="ListBullet"/><w:spacing w:before="60" w:after="80"/></w:pPr><w:r><w:rPr><w:sz w:val="20"/><w:color w:val="333333"/></w:rPr><w:t>${xmlEsc(issue)}</w:t></w:r></w:p>`;
+    });
+    bodyXml += `<w:p><w:pPr><w:spacing w:before="160" w:after="80"/></w:pPr></w:p>`;
+  }
+
+  // Build relationships XML
+  let relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId999" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  <Relationship Id="rId998" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>`;
+  imgRels.forEach(rel => {
+    relsXml += `\n  <Relationship Id="${rel.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${rel.rId}.jpg"/>`;
+  });
+  relsXml += `\n</Relationships>`;
+
+  const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+  xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+<w:body>${bodyXml}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1260" w:bottom="1440" w:left="1260"/></w:sectPr></w:body>
+</w:document>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:style w:type="paragraph" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="24"/><w:color w:val="333333"/></w:rPr></w:style>
+  <w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:rPr><w:b/><w:sz w:val="36"/><w:color w:val="1F3864"/></w:rPr></w:style>
+  <w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:rPr><w:b/><w:sz w:val="26"/><w:color w:val="2E5090"/></w:rPr><w:pPr><w:spacing w:before="320" w:after="120"/><w:pBdr><w:bottom w:val="single" w:sz="4" w:color="CCCCCC" w:space="4"/></w:pBdr></w:pPr></w:style>
+  <w:style w:type="paragraph" w:styleId="ListBullet"><w:name w:val="List Bullet"/><w:basedOn w:val="Normal"/><w:rPr><w:sz w:val="22"/><w:color w:val="222222"/></w:rPr><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr><w:ind w:left="360" w:hanging="180"/></w:pPr></w:style>
+</w:styles>`;
+
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="jpg" ContentType="image/jpeg"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+  <Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>
+</Types>`);
+
+  zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`);
+
+  const numberingXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="&#x2022;"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="360" w:hanging="180"/></w:pPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`;
+  zip.file('word/document.xml', docXml);
+  zip.file('word/styles.xml', stylesXml);
+  zip.file('word/numbering.xml', numberingXml);
+  zip.file('word/_rels/document.xml.rels', relsXml);
+
+  imgRels.forEach(rel => {
+    const binary = atob(rel.b64);
+    const bytes  = new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+    zip.file(`word/media/${rel.rId}.jpg`, bytes);
+  });
+
+  return await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════
+function startDiscovery(){
+  if(!S.videoFile || !S.vttFile){
+    document.getElementById('upload-error').innerHTML =
+      `<div class="alert alert-err">Please upload both files first.</div>`;
+    return;
+  }
+  if(!S.videoURL) S.videoURL = URL.createObjectURL(S.videoFile);
+  goToStage(1);
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function xmlEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function slugify(t){ return (t||'').toLowerCase().replace(/[^\w\s-]/g,'').replace(/[\s_-]+/g,'_').substring(0,50); }
+
+function downloadFile(name, content, type){
+  const blob = new Blob([content], {type});
+  downloadBlob(blob, name);
+}
+function downloadBlob(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Init
+goToStage(0);
+</script>
+</body>
+</html>
